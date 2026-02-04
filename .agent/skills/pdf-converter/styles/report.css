@@ -1,0 +1,345 @@
+/* 
+ * Report Style - Markdown to PDF
+ * 专业金融报告样式
+ */
+
+/* === 页面设置 === */
+@page {
+    size: A4;
+    margin: 2cm 2cm 2.5cm 2cm;
+
+    @top-left {
+        content: "Financial Analysis Report";
+        font-size: 9pt;
+        color: #6c757d;
+        font-family: "PingFang SC", sans-serif;
+    }
+
+    @top-right {
+        content: string(report-date);
+        font-size: 9pt;
+        color: #6c757d;
+    }
+
+    @bottom-center {
+        content: "— " counter(page) " —";
+        font-size: 9pt;
+        color: #6c757d;
+    }
+}
+
+@page :first {
+    @top-left {
+        content: none;
+    }
+
+    @top-right {
+        content: none;
+    }
+}
+
+/* === 基础样式 === */
+body {
+    font-family:
+        "PingFang SC",
+        "Hiragino Sans GB",
+        "Microsoft YaHei",
+        "Noto Sans SC",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.75;
+    color: #212529;
+    background: white;
+}
+
+.markdown-body {
+    max-width: 100%;
+}
+
+/* === 标题样式 === */
+h1 {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #1a365d;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0.3em;
+    padding-bottom: 0.5em;
+    border-bottom: 3px solid #2b6cb0;
+}
+
+h2 {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: #2c5282;
+    margin-top: 1.8em;
+    margin-bottom: 0.6em;
+    padding-bottom: 0.3em;
+    border-bottom: 2px solid #90cdf4;
+}
+
+h3 {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #2d3748;
+    margin-top: 1.4em;
+    margin-bottom: 0.5em;
+}
+
+h4 {
+    font-size: 1.05em;
+    font-weight: 600;
+    color: #4a5568;
+    margin-top: 1.2em;
+}
+
+h5,
+h6 {
+    font-size: 1em;
+    font-weight: 600;
+    color: #718096;
+}
+
+/* === 表格样式 (报告专用) === */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.2em 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+th {
+    background: linear-gradient(180deg, #2b6cb0 0%, #2c5282 100%);
+    color: white;
+    font-weight: 600;
+    padding: 10px 12px;
+    text-align: left;
+    border: none;
+}
+
+td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    border-left: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+}
+
+tr:nth-child(even) {
+    background-color: #f7fafc;
+}
+
+tr:last-child td {
+    border-bottom: 2px solid #2b6cb0;
+}
+
+/* 信号灯表格特殊样式 */
+td:first-child {
+    font-weight: 500;
+}
+
+/* === 代码 === */
+code {
+    font-family: "SF Mono", "Menlo", "Monaco", monospace;
+    font-size: 0.88em;
+    background-color: #edf2f7;
+    color: #c53030;
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+}
+
+pre {
+    background-color: #1a202c;
+    color: #e2e8f0;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 9pt;
+    line-height: 1.5;
+    margin: 1em 0;
+    border-left: 4px solid #4299e1;
+}
+
+pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+.codehilite {
+    background-color: #1a202c;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 1em 0;
+    border-left: 4px solid #4299e1;
+}
+
+.codehilite pre {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+/* === 引用块 === */
+blockquote {
+    border-left: 4px solid #4299e1;
+    background-color: #ebf8ff;
+    color: #2c5282;
+    padding: 12px 16px;
+    margin: 1em 0;
+    border-radius: 0 6px 6px 0;
+}
+
+blockquote p {
+    margin: 0.4em 0;
+}
+
+blockquote strong {
+    color: #1a365d;
+}
+
+/* === GitHub Alert 样式 (报告增强版) === */
+.alert {
+    border-radius: 8px;
+    margin: 1.2em 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.alert-note {
+    border-left: 4px solid #0969da !important;
+    background-color: #ddf4ff !important;
+}
+
+.alert-tip {
+    border-left: 4px solid #1a7f37 !important;
+    background-color: #dafbe1 !important;
+}
+
+.alert-important {
+    border-left: 4px solid #8250df !important;
+    background-color: #fbefff !important;
+}
+
+.alert-warning {
+    border-left: 4px solid #9a6700 !important;
+    background-color: #fff8c5 !important;
+}
+
+.alert-caution {
+    border-left: 4px solid #cf222e !important;
+    background-color: #ffebe9 !important;
+}
+
+/* === 列表 === */
+ul,
+ol {
+    padding-left: 1.8em;
+    margin: 0.8em 0;
+}
+
+li {
+    margin: 0.35em 0;
+}
+
+/* checkbox 样式 */
+li input[type="checkbox"] {
+    margin-right: 0.5em;
+}
+
+/* === 水平线 === */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #cbd5e0, transparent);
+    margin: 2em 0;
+}
+
+/* === 链接 === */
+a {
+    color: #2b6cb0;
+    text-decoration: none;
+    border-bottom: 1px dotted #90cdf4;
+}
+
+/* === 图片 === */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.2em auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* === 分页 === */
+h1,
+h2 {
+    page-break-after: avoid;
+}
+
+h3,
+h4,
+h5,
+h6 {
+    page-break-after: avoid;
+}
+
+table,
+pre,
+blockquote,
+.alert {
+    page-break-inside: avoid;
+}
+
+/* === 强调区块 === */
+strong {
+    font-weight: 600;
+    color: #1a202c;
+}
+
+/* 红色强调 */
+strong:has(🔴),
+p:has(🔴) {
+    color: #c53030;
+}
+
+/* 绿色强调 */
+strong:has(🟢),
+p:has(🟢) {
+    color: #276749;
+}
+
+/* 黄色强调 */
+strong:has(🟡),
+p:has(🟡) {
+    color: #975a16;
+}
+
+/* === 摘要框 === */
+.executive-summary {
+    background: linear-gradient(135deg, #ebf8ff 0%, #e6fffa 100%);
+    border: 1px solid #90cdf4;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 1.5em 0;
+}
+
+/* === 打印优化 === */
+@media print {
+    body {
+        font-size: 10pt;
+    }
+
+    a[href]:after {
+        content: none !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+}
