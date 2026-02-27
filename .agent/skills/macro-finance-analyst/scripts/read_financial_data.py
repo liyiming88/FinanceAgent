@@ -27,29 +27,67 @@ import pandas as pd
 # Configuration
 # =============================================================================
 
-# Default data directory path (relative to script location)
-DEFAULT_DATA_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    os.path.dirname(os.path.abspath(__file__)),
-    "../../../../datas/analysis/macro"
-)
 
-# FRED series descriptions
+def _find_latest_analysis_dir() -> str:
+    """Auto-detect the latest analysis data directory (datas/analysis/YYYY-MM-DD/).
+    
+    Data is produced by the financial-data-downloader skill.
+    Falls back to today's date directory path even if it doesn't exist yet.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    analysis_root = os.path.normpath(os.path.join(script_dir, "../../../../datas/analysis"))
+    
+    if os.path.isdir(analysis_root):
+        # Try today first
+        from datetime import datetime as _dt
+        today_str = _dt.now().strftime("%Y-%m-%d")
+        today_dir = os.path.join(analysis_root, today_str)
+        if os.path.isdir(today_dir):
+            return today_dir
+        
+        # Fall back to most recent date folder
+        date_dirs = sorted(
+            [d for d in os.listdir(analysis_root)
+             if os.path.isdir(os.path.join(analysis_root, d)) and len(d) == 10],
+            reverse=True,
+        )
+        if date_dirs:
+            return os.path.join(analysis_root, date_dirs[0])
+    
+    # Ultimate fallback (will trigger FileNotFoundError at load time)
+    return os.path.normpath(os.path.join(script_dir, "../../../../datas/analysis"))
+
+
+# Default data directory path (auto-detected from financial-data-downloader output)
+DEFAULT_DATA_DIR = _find_latest_analysis_dir()
+
+# FRED series descriptions (Matched with data-downloader analysis mode)
 FRED_SERIES = {
+    # --- Weekly Fed & Treasury ---
     "WALCL": "美联储总资产 (Fed Total Assets)",
     "WTREGEN": "财政部TGA账户 (Treasury General Account)",
-    "RRPONTSYD": "隔夜逆回购余额 (Overnight Reverse Repo)",
     "WRESBAL": "银行准备金余额 (Reserve Balances)",
+    # --- Daily Money Market ---
+    "RRPONTSYD": "隔夜逆回购余额 (Overnight Reverse Repo)",
+    # --- Monthly Indicators ---
     "BUSLOANS": "商业和工业贷款 (Business Loans)",
     "M2SL": "M2货币供应量 (M2 Money Supply)",
+    # --- Daily Rates & Market ---
     "T10Y2Y": "10Y-2Y收益率曲线 (Yield Curve Spread)",
+    "DGS2": "2年期国债收益率 (2-Year Treasury Yield)",
     "BAMLC0A0CM": "企业债利差 (Corporate Bond Spread)",
+    "BAMLH0A0HYM2": "高收益债利差 (High Yield Bond Spread)",
     "T10YIE": "10年期通胀预期 (10Y Breakeven Inflation)",
+    "DTWEXBGS": "美元指数-广义 (Broad Dollar Index DXY)",
+    "DCOILWTICO": "WTI原油价格 (WTI Crude Oil Price)",
 }
 
-# Additional data files
+# Additional data files (Yahoo Finance & parsed data)
 ADDITIONAL_FILES = {
     "MOVE": "债市波动率指数 (MOVE Index)",
+    "COPPER": "铜期货价格 (Copper Futures)",
+    "GOLD": "黄金期货价格 (Gold Futures)",
+    "COPPER_GOLD_RATIO": "铜金比 (Copper/Gold Ratio)",
     "QRA_Info": "财政部季度再融资公告 (Treasury QRA)",
     "Summary": "数据汇总 (Data Summary)",
 }
@@ -198,23 +236,32 @@ class FinancialDataReader:
         print("=" * 60)
         
         # Print FRED series data
-        print("\n### 第一维度：资金源头 ###")
+        print("\n### 第一维度：资金源头 (Source of Liquidity) ###")
         self._print_indicator("WALCL", "美联储总资产")
         self._print_indicator("WTREGEN", "财政部TGA账户")
         self._print_indicator("RRPONTSYD", "隔夜逆回购余额 (RRP)")
         
-        print("\n### 第二维度：传导确认 ###")
+        print("\n### 第二维度：传导确认 (Transmission Confirmation) ###")
         self._print_indicator("WRESBAL", "银行准备金余额")
+        self._print_indicator("DGS2", "2年期国债收益率")
         self._print_indicator("T10Y2Y", "10Y-2Y收益率曲线")
         
-        print("\n### 第三维度：风险定价 ###")
+        print("\n### 第三维度：风险定价 (Risk Pricing) ###")
         self._print_indicator("MOVE", "债市波动率指数 (MOVE)")
-        self._print_indicator("BAMLC0A0CM", "企业债利差 (HY Spreads)")
-        self._print_indicator("T10YIE", "10年期通胀预期")
+        self._print_indicator("BAMLH0A0HYM2", "高收益债利差 (HY Spreads)")
+        self._print_indicator("BAMLC0A0CM", "企业债利差")
         
-        print("\n### 其他指标 ###")
+        print("\n### 第四维度：跨资产验证 (Cross-Asset Validation) ###")
+        self._print_indicator("DTWEXBGS", "美元指数-广义 (DXY)")
+        self._print_indicator("DCOILWTICO", "WTI原油价格")
+        self._print_indicator("COPPER_GOLD_RATIO", "铜金比 (Copper/Gold Ratio)")
+        
+        print("\n### 其他指标 (Others) ###")
+        self._print_indicator("T10YIE", "10年期通胀预期")
         self._print_indicator("BUSLOANS", "商业和工业贷款")
         self._print_indicator("M2SL", "M2货币供应量")
+        self._print_indicator("COPPER", "铜期货价格")
+        self._print_indicator("GOLD", "黄金期货价格")
         
         # QRA info
         if self.qra_info is not None and len(self.qra_info) > 0:
@@ -269,16 +316,17 @@ class FinancialDataReader:
                     "trend": trend
                 }
 
-        # Add MOVE index if available
-        move_latest = self.get_latest_value("MOVE")
-        move_trend = self.get_trend("MOVE")
-        if move_latest:
-            report["indicators"]["MOVE"] = {
-                "description": ADDITIONAL_FILES["MOVE"],
-                "latest_date": move_latest[0],
-                "latest_value": move_latest[1],
-                "trend": move_trend
-            }
+        # Add additional files (Yahoo Finance data)
+        for series_id in ["MOVE", "COPPER", "GOLD", "COPPER_GOLD_RATIO"]:
+            latest = self.get_latest_value(series_id)
+            trend = self.get_trend(series_id)
+            if latest:
+                report["indicators"][series_id] = {
+                    "description": ADDITIONAL_FILES.get(series_id, series_id),
+                    "latest_date": latest[0],
+                    "latest_value": latest[1],
+                    "trend": trend
+                }
 
         # Generate assessment based on key indicators
         walcl_trend = report["indicators"].get("WALCL", {}).get("trend")

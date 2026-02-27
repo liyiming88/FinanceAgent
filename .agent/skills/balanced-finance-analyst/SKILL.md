@@ -92,18 +92,22 @@ Gap% = (QQQ_Close - MA20) / MA20 × 100
 
 在生成报告前，**必须执行以下步骤** 获取宏观数据：
 
-1. **运行数据下载器**: 调用 `data-downloader` 技能获取最新数据。
+> [!IMPORTANT]
+> **本 Agent 禁止自行下载任何数据。** 所有数据下载必须通过 `financial-data-downloader` 技能完成。
+
+1. **确保数据已下载**: 先调用 `financial-data-downloader` 技能以 analysis 模式下载当天数据。
    ```bash
-   python .agent/skills/data-downloader/scripts/download_financial_data.py --output datas/analysis/macro --years 1
+   python .agent/skills/data-downloader/scripts/download_financial_data.py --mode analysis
    ```
+   数据将保存在 `datas/analysis/YYYY-MM-DD/` 目录下（当天日期）。若当天数据已存在，脚本会自动跳过。
 
 2. **读取关键指标**:
-   *通过 `check_qqq_ma20` 脚本中的 `analyze_macro_status` 方法自动读取并分析以下文件：*
+   *从 `datas/analysis/YYYY-MM-DD/` 目录读取并分析以下文件（由 `financial-data-downloader` 生成）：*
    - `WTREGEN.csv` (TGA - 财政部存款)
    - `WRESBAL.csv` (Reserves - 银行准备金)
    - `RRPONTSYD.csv` (RRP - 逆回购余额)
-   - `BAMLH0A0HYM2.csv` (HY Spreads - 高收益债利差)
-   - `DGS10.csv` (US10Y - 10年期美债收益率)
+   - `BAMLH0A0HYM2.csv` (High Yield Bond Spread - 高收益债利差)
+   - `DGS2.csv` (2年期国债收益率)
 
 3. **执行判断逻辑**:
 

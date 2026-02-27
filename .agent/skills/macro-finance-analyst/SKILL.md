@@ -192,6 +192,12 @@ $$流动性净值 = WRESBAL + RRP - TGA$$
 
 列出当前最大的"黑天鹅"隐患（如 RRP 归零、通胀反弹、地缘政治导致的油价飙升）。
 
+### 5. 报告文件生成 (Report Generation)
+
+分析完成后，**必须将完整的分析报告保存为 Markdown 文件**。
+- **文件保存位置**: `.agent/skills/macro-finance-analyst/report/` 目录下（如果目录不存在则创建）。
+- **文件命名规则**: `report-YYYYMMDD-HHMM.md` (例如: `report-20260227-1600.md`)。
+
 ---
 
 ## 💡 示例对话风格

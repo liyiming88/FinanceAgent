@@ -14,49 +14,23 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
-import subprocess
-import sys
 
 
-def get_qqq_data():
-    """获取 QQQ 周线数据 (含 MA20)"""
+def get_qqq_data(macro_dir):
+    """从 financial-data-downloader 下载的分析目录中读取 QQQ 数据"""
     
-    print("正在获取 QQQ 数据...")
+    print("📥 读取 QQQ 数据...")
     
     try:
-        qqq = yf.Ticker("QQQ")
+        csv_path = macro_dir / "QQQ_MA20.csv"
+        df = pd.read_csv(csv_path)
         
-        # 1. 获取2年周线数据 (Weekly K-line)
-        # auto_adjust=True 保证价格是复权后的真实价格
-        hist_weekly = qqq.history(period="2y", interval="1wk", auto_adjust=True)
-        
-        if hist_weekly.empty:
-            print("❌ 获取周线数据失败，请检查网络 (可能需要科学上网)")
-            return None
-        
-        # 2. 计算 20周均线 (MA20)
-        hist_weekly['MA20'] = hist_weekly['Close'].rolling(window=20).mean()
-        
-        # 3. 整理数据
-        # 保留 OHLC 和 MA20
-        df_result = hist_weekly[['Close', 'MA20']].copy()
-        
-        # 处理日期格式
-        df_result.reset_index(inplace=True)
-        df_result['Date'] = df_result['Date'].dt.strftime('%Y-%m-%d')
-        
-        # 舍入小数位
-        cols = ['Close', 'MA20']
-        df_result[cols] = df_result[cols].round(2)
-        
-        # Reorder columns explicitly to match user request: Date, Close, MA20
-        df_result = df_result[['Date', 'Close', 'MA20']]
-        
+        # 提取所需的列
+        df_result = df[['Date', 'Close', 'MA20']].copy()
         return df_result
         
     except Exception as e:
-        print(f"❌ 获取数据失败: {e}")
-        print("💡 提示: 请检查网络连接，可能需要科学上网访问 Yahoo Finance")
+        print(f"❌ 读取 QQQ 数据失败 (请确认 financial-data-downloader 是否正常下载了 QQQ_MA20.csv): {e}")
         return None
 
 
@@ -65,29 +39,28 @@ def get_qqq_data():
 # Macro Logic
 # =============================================================================
 
-def update_macro_data(output_dir):
-    """Call data-downloader to get fresh macro data"""
-    print("⏳ 正在更新宏观数据 (运行 data-downloader)...")
-    downloader_script = Path(__file__).parent.parent.parent / "data-downloader" / "scripts" / "download_financial_data.py"
+def find_latest_analysis_dir():
+    """Find the latest analysis data directory (datas/analysis/YYYY-MM-DD/).
     
-    if not downloader_script.exists():
-        print(f"⚠️ 找不到下载器脚本: {downloader_script}")
-        return False
-        
-    cmd = [
-        sys.executable,
-        str(downloader_script),
-        "--output", str(output_dir),
-        "--years", "1"
-    ]
+    Searches for today's directory first, then falls back to the most recent one.
+    Returns Path or None.
+    """
+    analysis_root = Path(__file__).parents[4] / "datas" / "analysis"
+    if not analysis_root.exists():
+        return None
     
-    try:
-        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("✅ 宏观数据更新完毕")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ 数据更新失败: {e}")
-        return False
+    # Try today first
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    today_dir = analysis_root / today_str
+    if today_dir.exists():
+        return today_dir
+    
+    # Fall back to most recent date folder
+    date_dirs = sorted(
+        [d for d in analysis_root.iterdir() if d.is_dir() and len(d.name) == 10],
+        reverse=True
+    )
+    return date_dirs[0] if date_dirs else None
 
 def get_latest_value(df):
     """Helper to get latest date and value"""
@@ -103,17 +76,19 @@ def get_prev_value(df, steps=1):
     return float(df.iloc[-(steps+1)]['Value'])
 
 def analyze_macro_status(macro_dir):
-    """Analyze macro indicators and return status"""
+    """Analyze macro indicators and return status.
     
-    # 1. Read files
+    Reads data from the financial-data-downloader's analysis output directory.
+    Expected files: WRESBAL.csv, BAMLC0A0CM.csv, DGS2.csv
+    """
+    
+    # 1. Read files (names match financial-data-downloader analysis output)
     try:
-        # tga_df = pd.read_csv(macro_dir / "WTREGEN.csv")      # Not used in Tier 1 logic
-        res_df = pd.read_csv(macro_dir / "WRESBAL.csv")      # Millions
-        # rrp_df = pd.read_csv(macro_dir / "RRPONTSYD.csv")    # Not used in Tier 1 logic
-        hy_df = pd.read_csv(macro_dir / "BAMLH0A0HYM2.csv")  # Percent
-        us10y_df = pd.read_csv(macro_dir / "DGS10.csv")      # Percent
+        res_df = pd.read_csv(macro_dir / "WRESBAL.csv")       # Millions
+        hy_df = pd.read_csv(macro_dir / "BAMLH0A0HYM2.csv")   # Percent (High Yield Bond Spread)
+        us10y_df = pd.read_csv(macro_dir / "DGS2.csv")        # Percent (2-Year Treasury Yield)
     except Exception as e:
-        print(f"⚠️ 读取宏观数据失败 (可能文件缺失, 请先运行下载器): {e}")
+        print(f"⚠️ 读取宏观数据失败 (请先运行 financial-data-downloader --mode analysis): {e}")
         return None
 
     # 2. Extract Latest Values
@@ -196,19 +171,24 @@ def analyze_macro_status(macro_dir):
 def check_qqq_ma20_status():
     """检查 QQQ 的 MA20 状态并输出 CSV"""
     
-    # --- Step 0: Macro Data Update ---
+    # --- Step 0: Find Macro Data (from financial-data-downloader) ---
     script_dir = Path(__file__).parent
-    macro_data_dir = script_dir.parents[3] / "datas" / "analysis" / "macro"
-    update_macro_data(macro_data_dir)
+    macro_data_dir = find_latest_analysis_dir()
     
-    macro_signals = analyze_macro_status(macro_data_dir)
+    if macro_data_dir is None:
+        print("⚠️ 未找到分析数据目录。请先运行:")
+        print("   python .agent/skills/data-downloader/scripts/download_financial_data.py --mode analysis")
+        macro_signals = None
+    else:
+        print(f"📂 使用宏观数据: {macro_data_dir}")
+        macro_signals = analyze_macro_status(macro_data_dir)
 
     # --- Step 1: QQQ Data ---
-    df = get_qqq_data()
+    df = get_qqq_data(macro_data_dir)
     if df is None:
         return
     
-    # Save CSV
+    # Save CSV copy to balanced directory (optional but keeps original logic)
     csv_data = df.tail(5)
     output_dir = script_dir.parents[3] / "datas" / "analysis" / "balanced"
     output_dir.mkdir(exist_ok=True)

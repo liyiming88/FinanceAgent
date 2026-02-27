@@ -1,13 +1,30 @@
 ---
-name: 国际金融数据下载器
-description: 一键下载 18 种国际宏观金融指标的 1 年期 CSV 数据。支持 FRED 系列指标批量下载、财政部 QRA 公告获取，以及 MOVE 指数自动下载。
+name: financial-data-downloader
+description: >
+  项目唯一的数据下载 Agent。支持两种模式：
+  1. analysis — 为 balanced-finance-analyst / macro-finance-analyst 下载最近 3 个月宏观指标 (17 项)
+  2. backtest — 为 Backtest Agent 下载 10 年历史数据 (7 项)
 ---
 
-# 国际金融数据下载器 (Financial Data Downloader)
+# Financial Data Downloader
 
-一键下载关键宏观流动性监控指标，输出为多个 CSV 文件。
+> [!IMPORTANT]
+> 本项目中 **只有此 Agent 被授权执行数据下载**。其它 Agent 不得自行联网下载数据。
 
-## 支持的数据指标
+---
+
+## 两种下载模式
+
+### 模式一：Analysis（分析数据）
+
+| 项 | 说明 |
+|:---|:-----|
+| **触发条件** | 上游 Agent 为 `balanced-finance-analyst` 或 `macro-finance-analyst`，**且** `datas/analysis/` 下不存在当天日期文件夹 (`YYYY-MM-DD`) |
+| **数据范围** | 最近 3 个月（下载 1 年数据后裁剪至最新 25%） |
+| **输出目录** | `datas/analysis/YYYY-MM-DD/` |
+| **防重复** | 如目标文件夹已存在，跳过下载（`--force` 可覆盖） |
+
+**支持指标（17 项）：**
 
 | 代码 | 名称 | 频率 | 数据源 |
 |------|------|------|--------|
@@ -31,37 +48,59 @@ description: 一键下载 18 种国际宏观金融指标的 1 年期 CSV 数据�
 
 ---
 
+### 模式二：Backtest（回测数据）
+
+| 项 | 说明 |
+|:---|:-----|
+| **触发条件** | 上游 Agent 为 `Backtest Agent`，**且** 提示词中明确包含「用最新数据」 |
+| **数据范围** | 10 年 |
+| **输出目录** | `datas/backtest/` |
+
+**支持标的（7 项）：**
+
+| 输出文件 | 数据源 | 代码 |
+|----------|--------|------|
+| `QQQ.csv` | Yahoo Finance | QQQ |
+| `SHV.csv` | Yahoo Finance | SHV |
+| `WRESBAL.csv` | FRED | WRESBAL |
+| `WTREGEN.csv` | FRED | WTREGEN |
+| `RRPONTSYD.csv` | FRED | RRPONTSYD |
+| `BAMLH0A0HYM2.csv` | FRED | BAMLH0A0HYM2 |
+| `PCEPI.csv` | FRED | PCEPI |
+
+---
+
 ## 快速使用
 
 ### 1. 安装依赖
 
 ```bash
-cd /Users/patrick_0000/develop/AIPOC/FinanceAgent/.agent/skills/data-downloader
-pip install -r requirements.txt
+pip install -r .agent/skills/data-downloader/requirements.txt
 ```
 
-### 2. 运行下载
+### 2. 分析数据下载
 
 ```bash
-python scripts/download_financial_data.py
+# 自动检测当天文件夹是否存在，不存在则下载
+python .agent/skills/data-downloader/scripts/download_financial_data.py --mode analysis
+
+# 强制重新下载（即使今天已下载）
+python .agent/skills/data-downloader/scripts/download_financial_data.py --mode analysis --force
 ```
 
-默认输出到 `../macro-finance-analyst/finance-data/` 目录，每个指标保存为独立的 CSV 文件
-
-> [!NOTE]
-> 如果目标目录已存在同名文件，脚本将自动替换。
-
-### 3. 自定义输出路径
+### 3. 回测数据下载
 
 ```bash
-python scripts/download_financial_data.py --output /path/to/your/folder
+python .agent/skills/data-downloader/scripts/download_financial_data.py --mode backtest
 ```
 
 ---
 
 ## 输出格式
 
-每个指标保存为独立的 CSV 文件：
+### Analysis 模式
+
+每个指标独立 CSV，保存在 `datas/analysis/YYYY-MM-DD/`：
 
 | 文件名 | 内容 |
 |--------|------|
@@ -77,23 +116,16 @@ python scripts/download_financial_data.py --output /path/to/your/folder
 | `T10YIE.csv` | 通胀预期时间序列 |
 | `DTWEXBGS.csv` | 美元指数 (DXY) 时间序列 |
 | `DCOILWTICO.csv` | WTI 原油价格时间序列 |
-| `QRA_Info.csv` | 最近 4 个季度 QRA 公告链接 |
+| `QRA_Info.csv` | 最近 QRA 公告链接 |
 | `MOVE.csv` | 债市波动率指数时间序列 |
 | `COPPER.csv` | 铜期货价格时间序列 |
 | `GOLD.csv` | 黄金期货价格时间序列 |
-| `COPPER_GOLD_RATIO.csv` | 铜金比时间序列 (自动计算) |
+| `COPPER_GOLD_RATIO.csv` | 铜金比时间序列 |
 | `Summary.csv` | 所有指标汇总信息 |
 
----
+### Backtest 模式
 
-## MOVE 指数说明
-
-> [!NOTE]
-> MOVE 指数 (ICE BofA MOVE Index) 通过 Yahoo Finance 自动下载，代码为 `^MOVE`。
-
-**数据来源：**
-- Yahoo Finance: [https://finance.yahoo.com/quote/%5EMOVE](https://finance.yahoo.com/quote/%5EMOVE)
-- 使用 `yfinance` 库自动获取历史数据
+每个标的独立 CSV（10 年完整数据），保存在 `datas/backtest/`。
 
 ---
 
@@ -101,6 +133,6 @@ python scripts/download_financial_data.py --output /path/to/your/folder
 
 - **FRED 数据**：通过 FRED 公开 CSV API 获取，无需 API Key
 - **QRA 公告**：爬取 Treasury.gov 官方页面
-- **MOVE 指数**：通过 Yahoo Finance API (`yfinance`) 获取，代码 `^MOVE`
-- **数据范围**：默认下载最近 1 年（365 天）数据，但是只取25%的最新数据
-- **更新频率**：建议每周末运行一次以保持数据最新
+- **MOVE / COPPER / GOLD**：通过 Yahoo Finance API (`yfinance`) 获取
+- **Analysis 数据范围**：下载最近 1 年数据，保留最新 25%（≈3 个月）
+- **Backtest 数据范围**：下载最近 10 年完整数据
