@@ -198,7 +198,7 @@ def check_qqq_ma20_status():
     
     # --- Step 0: Macro Data Update ---
     script_dir = Path(__file__).parent
-    macro_data_dir = script_dir.parent / "data" / "macro"
+    macro_data_dir = script_dir.parents[3] / "datas" / "analysis" / "macro"
     update_macro_data(macro_data_dir)
     
     macro_signals = analyze_macro_status(macro_data_dir)
@@ -210,7 +210,7 @@ def check_qqq_ma20_status():
     
     # Save CSV
     csv_data = df.tail(5)
-    output_dir = script_dir.parent / "data"
+    output_dir = script_dir.parents[3] / "datas" / "analysis" / "balanced"
     output_dir.mkdir(exist_ok=True)
     
     timestamp = datetime.now().strftime('%Y%m%d')

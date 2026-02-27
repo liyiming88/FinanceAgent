@@ -28,20 +28,46 @@ import yfinance as yf
 # =============================================================================
 
 FRED_SERIES = {
+    # =========================================================================
+    # 最佳下载时间建议 (Best Download Time Recommendation) - UTC+8 东八区
+    # =========================================================================
+    # 建议时间: 每天早上 07:00 (冬令时) / 06:00 (夏令时) 之后
+    # Recommended: After 07:00 AM (Winter) / 06:00 AM (Summer) daily.
+    #
+    # 更新详情 (Update Schedule):
+    # 1. 日更数据 (Daily): 美债、美元、石油、RRP 等通常在美股收盘后不久更新 (03:00-05:15 UTC+8)。
+    #    早上下载可获得最新鲜的昨日收盘数据。
+    # 2. 周更数据 (Weekly): 美联储资产负债表 (WALCL, WRESBAL, WTREGEN) 周四美盘后更新。
+    #    周五早上下载可获得最新一周数据。
+    # 3. 滞后数据 (Lagged): 信用利差 (Spreads) 更新较晚 (次日22:00 UTC+8)。
+    #    早上下载只能获得前天收盘数据 (T-2)，这是正常现象。
+    # =========================================================================
+
+    # --- Weekly Fed & Treasury (Update: Thu 16:30 ET -> Fri 05:30 UTC+8) ---
     "WALCL": "美联储总资产 (Fed Total Assets)",
     "WTREGEN": "财政部TGA账户 (Treasury General Account)",
-    "RRPONTSYD": "隔夜逆回购余额 (Overnight Reverse Repo)",
     "WRESBAL": "银行准备金余额 (Reserve Balances)",
+
+    # --- Daily Money Market (Update: 14:15 ET -> Next Day 03:15 UTC+8) ---
+    "RRPONTSYD": "隔夜逆回购余额 (Overnight Reverse Repo)",
+
+    # --- Monthly Indicators ---
     "BUSLOANS": "商业和工业贷款 (Business Loans)",
     "M2SL": "M2货币供应量 (M2 Money Supply)",
+    "PCEPI": "个人消费支出价格指数 (PCE Price Index)",
+
+    # --- Daily Rates & Market (Update: ~16:15 ET -> Next Day 05:15 UTC+8) ---
     "T10Y2Y": "10Y-2Y收益率曲线 (Yield Curve Spread)",
     "DGS2": "2年期国债收益率 (2-Year Treasury Yield)",
     "DGS10": "10年期国债收益率 (10-Year Treasury Yield)",
-    "BAMLC0A0CM": "企业债利差 (Corporate Bond Spread)",
-    "BAMLH0A0HYM2": "高收益债利差 (High Yield Bond Spread)",
     "T10YIE": "10年期通胀预期 (10Y Breakeven Inflation)",
     "DTWEXBGS": "美元指数-广义 (Broad Dollar Index DXY)",
     "DCOILWTICO": "WTI原油价格 (WTI Crude Oil Price)",
+
+    # --- Credit Spreads (Update: Lagged, T+1 09:00 ET -> T+1 22:00 UTC+8) ---
+    # *Note: Morning download gets T-2 data.
+    "BAMLC0A0CM": "企业债利差 (Corporate Bond Spread)",
+    "BAMLH0A0HYM2": "高收益债利差 (High Yield Bond Spread)",
 }
 
 QRA_URL = "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding"

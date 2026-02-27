@@ -6,7 +6,7 @@ from io import StringIO
 from datetime import datetime, timedelta
 
 # Configuration
-OUTPUT_DIR = "eval/datas"
+OUTPUT_DIR = "datas/backtest"
 YEARS = 10
 END_DATE = datetime.now()
 START_DATE = END_DATE - timedelta(days=YEARS * 365)
@@ -20,6 +20,7 @@ DATA_SOURCES = {
     'WTREGEN.csv': ('fred', 'WTREGEN'),
     'RRPONTSYD.csv': ('fred', 'RRPONTSYD'),
     'BAMLH0A0HYM2.csv': ('fred', 'BAMLH0A0HYM2'),
+    'PCEPI.csv': ('fred', 'PCEPI'),
 }
 
 def fetch_fred_series(series_id, start_date, end_date):

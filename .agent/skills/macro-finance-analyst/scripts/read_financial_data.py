@@ -30,7 +30,8 @@ import pandas as pd
 # Default data directory path (relative to script location)
 DEFAULT_DATA_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "..", "finance-data"
+    os.path.dirname(os.path.abspath(__file__)),
+    "../../../../datas/analysis/macro"
 )
 
 # FRED series descriptions

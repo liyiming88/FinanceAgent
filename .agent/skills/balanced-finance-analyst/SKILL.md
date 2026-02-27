@@ -59,7 +59,7 @@ python .agent/skills/balanced-finance-analyst/scripts/check_qqq_ma20.py
 
 ### CSV 输出格式
 
-文件保存在 `data/qqq_ma20_YYYYMMDD.csv`，包含最近 5 周数据，格式如下：
+文件保存在 `datas/analysis/balanced/qqq_ma20_YYYYMMDD.csv`，包含最近 5 周数据，格式如下：
 
 | Date | Close | MA20 |
 |:-----|------:|-----:|
@@ -94,7 +94,7 @@ Gap% = (QQQ_Close - MA20) / MA20 × 100
 
 1. **运行数据下载器**: 调用 `data-downloader` 技能获取最新数据。
    ```bash
-   python .agent/skills/data-downloader/scripts/download_financial_data.py --output .agent/skills/balanced-finance-analyst/data/macro --years 1
+   python .agent/skills/data-downloader/scripts/download_financial_data.py --output datas/analysis/macro --years 1
    ```
 
 2. **读取关键指标**:

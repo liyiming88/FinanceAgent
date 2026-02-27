@@ -1,0 +1,15 @@
+Series,Description,Data Points,Start Date,End Date,Latest Value
+WALCL,美联储总资产 (Fed Total Assets),13,2025-11-12,2026-02-04,6605909.0
+WTREGEN,财政部TGA账户 (Treasury General Account),13,2025-11-12,2026-02-04,908773.0
+WRESBAL,银行准备金余额 (Reserve Balances),13,2025-11-12,2026-02-04,2925170.0
+RRPONTSYD,隔夜逆回购余额 (Overnight Reverse Repo),62,2025-11-12,2026-02-11,1.048
+BUSLOANS,商业和工业贷款 (Business Loans),2,2025-11-01,2025-12-01,2709.7583
+M2SL,M2货币供应量 (M2 Money Supply),2,2025-11-01,2025-12-01,22411.0
+T10Y2Y,10Y-2Y收益率曲线 (Yield Curve Spread),62,2025-11-12,2026-02-11,0.66
+DGS2,2年期国债收益率 (2-Year Treasury Yield),62,2025-11-10,2026-02-10,3.45
+DGS10,10年期国债收益率 (10-Year Treasury Yield),62,2025-11-10,2026-02-10,4.16
+T10YIE,10年期通胀预期 (10Y Breakeven Inflation),62,2025-11-12,2026-02-11,2.32
+DTWEXBGS,美元指数-广义 (Broad Dollar Index DXY),61,2025-11-07,2026-02-06,118.2407
+DCOILWTICO,WTI原油价格 (WTI Crude Oil Price),61,2025-11-10,2026-02-09,64.53
+BAMLC0A0CM,企业债利差 (Corporate Bond Spread),65,2025-11-12,2026-02-10,0.77
+BAMLH0A0HYM2,高收益债利差 (High Yield Bond Spread),65,2025-11-12,2026-02-10,2.86
